@@ -1,19 +1,19 @@
 import io.qameta.allure.Description;
-import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
-import org.example.courier.CreateOrder;
+import org.example.order.PostOrdersResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import static io.restassured.RestAssured.given;
-import static org.apache.http.HttpHeaders.CONTENT_TYPE;
-import static org.apache.http.entity.ContentType.APPLICATION_JSON;
-import static org.example.courier.Constants.ORDERS_BASE_URL;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.example.common.CommonChecks.checkThatStatusCodeIsCorrect;
+import static org.example.common.Constants.BASE_URL;
+import static org.example.common.Constants.ORDERS_BASE_URL;
+import static org.example.order.OrderApi.sendPostRequestOrders;
+import static org.example.order.OrderApi.sendPutRequestOrders;
+import static org.example.order.OrderChecks.checkThatBodyHasFieldTrackAndItsValueIsNotNull;
 
 //Чтобы протестировать создание заказа, нужно использовать параметризацию.
 @RunWith(Parameterized.class)
@@ -31,7 +31,7 @@ public class OrderCreationTest {
 
     @Before
     public void setUp() {
-        RestAssured.baseURI= "https://qa-scooter.praktikum-services.ru";
+        RestAssured.baseURI = BASE_URL;
     }
 
     public OrderCreationTest(String firstName, String lastName, String address, int metroStation, String phone,
@@ -69,28 +69,12 @@ public class OrderCreationTest {
         Response response = sendPostRequestOrders(firstName, lastName, address, metroStation, phone, rentTime, deliveryDate, comment, color);
 
         checkThatStatusCodeIsCorrect(response, 201);
-        checkThatBodyHasFieldIdAndItsValueIsNotNull(response);
+        checkThatBodyHasFieldTrackAndItsValueIsNotNull(response);
+
+        sendPutRequestOrders(getTrack(response));
     }
 
-    @Step("Send POST request to " + ORDERS_BASE_URL)
-    private Response sendPostRequestOrders(String firstName, String lastName, String address, int metroStation,
-                                           String phone, int rentTime, String deliveryDate, String comment,
-                                           String[] color) {
-        CreateOrder createOrder = new CreateOrder(firstName, lastName, address, metroStation, phone, rentTime,
-                deliveryDate, comment, color);
-        return given()
-                .header(CONTENT_TYPE, APPLICATION_JSON.getMimeType())
-                .body(createOrder)
-                .post(ORDERS_BASE_URL);
-    }
-
-    @Step("Check that statusCode is correct")
-    private void checkThatStatusCodeIsCorrect(Response response, int expected){
-        response.then().statusCode(expected);
-    }
-
-    @Step("Check that body's field track contains not null value")
-    private void checkThatBodyHasFieldIdAndItsValueIsNotNull(Response response) {
-        response.then().body("track", notNullValue());
+    public static int getTrack(Response response) {
+        return response.body().as(PostOrdersResponse.class).getTrack();
     }
 }
