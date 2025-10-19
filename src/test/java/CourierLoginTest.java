@@ -54,12 +54,18 @@ public class CourierLoginTest {
     @Test
     @DisplayName("Check status code of " + COURIER_BASE_URL)
     @Description("Basic test for " + COURIER_BASE_URL + " endpoint")
-    public void loginCourierWithWrongLoginOrPassword() {
+    public void loginCourierWithWrongLogin() {
         Response response = sendPostRequestCourierLogin(password, password);
-        Response response2 = sendPostRequestCourierLogin(login, login);
-
         checkThatStatusCodeIsCorrect(response, 404);
         checkThatBodyHasFieldMessageAndItsValueIsCorrect(response, "Учетная запись не найдена");
+    }
+
+    @Test
+    @DisplayName("Check status code of " + COURIER_BASE_URL)
+    @Description("Basic test for " + COURIER_BASE_URL + " endpoint")
+    public void loginCourierWithWrongPassword() {
+        Response response2 = sendPostRequestCourierLogin(login, login);
+
         checkThatStatusCodeIsCorrect(response2, 404);
         checkThatBodyHasFieldMessageAndItsValueIsCorrect(response2, "Учетная запись не найдена");
     }

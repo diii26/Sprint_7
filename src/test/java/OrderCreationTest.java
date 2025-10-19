@@ -3,6 +3,7 @@ import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.example.order.PostOrdersResponse;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,6 +20,7 @@ import static org.example.order.OrderChecks.checkThatBodyHasFieldTrackAndItsValu
 @RunWith(Parameterized.class)
 public class OrderCreationTest {
 
+    private Response response;
     private final String firstName;
     private final String lastName;
     private final String address;
@@ -32,6 +34,12 @@ public class OrderCreationTest {
     @Before
     public void setUp() {
         RestAssured.baseURI = BASE_URL;
+        response = sendPostRequestOrders(firstName, lastName, address, metroStation, phone, rentTime, deliveryDate, comment, color);
+    }
+
+    @After
+    public void tearDown() {
+        sendPutRequestOrders(getTrack(response));
     }
 
     public OrderCreationTest(String firstName, String lastName, String address, int metroStation, String phone,
@@ -66,12 +74,8 @@ public class OrderCreationTest {
     @DisplayName("Check status code of " + ORDERS_BASE_URL)
     @Description("Basic test for " + ORDERS_BASE_URL + " endpoint")
     public void createOrder() {
-        Response response = sendPostRequestOrders(firstName, lastName, address, metroStation, phone, rentTime, deliveryDate, comment, color);
-
         checkThatStatusCodeIsCorrect(response, 201);
         checkThatBodyHasFieldTrackAndItsValueIsNotNull(response);
-
-        sendPutRequestOrders(getTrack(response));
     }
 
     public static int getTrack(Response response) {
